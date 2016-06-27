@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8 />
+    <title>turf.js</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.8/mapbox.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.8/mapbox.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+        .fill-gray, .fill-grey {background: #EEE;}
+        .pin-top {top: 0;right: 0;left: 0;position: absolute;}
+        .pad1 {padding: 10px 10px 10px 50px;}
+    </style>
+</head>
+<body>
+
+    <script src='data.js'></script>
+    <script src='punto.js'></script>
+
+    <div id='map'></div>
+    <div id='stationsNum' class="number">Number of users: 0<div>
+        <div class="pin-top fill-gray pad1">
+            Distancia en metros
+            <input type="number" id="radius" max="300" min="0" class="clean short small-input" value="100" step="10">  
+            <p id="numuser"><p>
+            </div>
+            <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v1.3.0/turf.min.js'></script>
+
+            <script>
+                L.mapbox.accessToken = 'pk.eyJ1IjoiY2VzYXIyOCIsImEiOiI0Mm8yUkhnIn0.u8GrcBcjxtt7ao-6LC5TiQ';
+                var map = L.mapbox.map('map', 'cesar28.m194al8c')
+                               
+                var dataStyle = {
+                    radius: 0,
+                    fillColor: "blue",
+                    color: "#000",
+                    weight: 0,
+                    opacity: 0,
+                    fillOpacity: 0.0
+                };
+
+                var data_fcLayer =L.geoJson(geojson, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, dataStyle);
+                    }
+                }).addTo(map);
+
+                var punto_fcLayer =L.geoJson(punto)
+                punto_fcLayer.setStyle({ color: 'hotpink', weight: 3 });
+                map.fitBounds(punto_fcLayer.getBounds());
+
+        //data_fcLayer.addTo(map);
+        punto_fcLayer.addTo(map);
+
+        function run() {
+            var radius = parseInt(document.getElementById('radius').value);
+            if (isNaN(radius)) radius = 5000;
+            
+            // buffer(feature, distance, unit)
+            var buffer = turf.buffer(punto, radius/1000, 'kilometers');
+            var bufferLayer =L.geoJson(buffer, {
+                onEachFeature: onEachFeature
+            }).addTo(map);
+
+            function onEachFeature(feature, layer) {
+             layer.bindPopup('Area de trabajo')
+         }
+
+         bufferLayer.setStyle({
+            stroke: false,
+            fillColor: 'hotpink',
+            fillOpacity: 0.5
+        })
+
+         function getColor(d) {
+            return d > 1 ? 'red' :
+            d <= 1.1   ? 'green' :
+            "#000";
+        }
+
+        function insideUserStyle(feature) {
+            return {
+                radius: 10,
+                fillColor: "red",   
+                color: "#7ec9b1",
+                weight: 4,
+                opacity: 1,
+                fillOpacity: 0.8
+            };
+        }
+
+        var usersInside = turf.within(geojson, buffer);
+        var usersNumber=0;
+        var usuariosinside =L.geoJson(usersInside, {
+            onEachFeature: function(feature, layer) {
+                usersNumber++
+                layer.bindPopup("<h4>"+feature.properties.title+"</h4><br><b>User:</b> " + feature.properties.title +
+                    
+                    "<br><b>Total obbjetos: </b>" + feature.properties.title +
+                    "<br><b>Perfil osm: </b>" + feature.properties.title +
+                    "<br><b> Twyter: </b>" + feature.properties.Horario);
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng);
+            },
+            style:insideUserStyle
+        }).addTo(map);
+        document.getElementById('numuser').innerHTML = "Numero de usuarios: "+usersNumber;
+    }
+
+    run();
+    document.getElementById('radius').onchange = run;
+
+
+</script>
+</body>
+</html>

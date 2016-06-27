@@ -1,0 +1,1 @@
+var punto ={"type":"FeatureCollection","features":[{"type":"Feature","id":"node/-7207","properties":{"historic":"monument","name":"Mariscal Sucre"},"geometry":{"type":"Point","coordinates":[-74.22574280947,-13.16040670291]}}]}
